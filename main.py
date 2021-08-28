@@ -45,7 +45,7 @@ async def invite_command(ctx: commands.Context):
 @commands.has_permissions(manage_roles=True, mention_everyone=True)
 async def role_command(ctx: commands.Context, subcommand: str, *args):
     if subcommand == "set":
-        role_name = args[0]
+        role_name = f"{ctx.guild.id}-{args[0]}"
 
         try:
             role = await commands.RoleConverter().convert(ctx, args[1])
@@ -54,13 +54,13 @@ async def role_command(ctx: commands.Context, subcommand: str, *args):
             if role_name not in role_perms:
                 role_perms[role_name] = []
 
-            await ctx.reply(f"Added role label `{role_name}` => <@&{role.id}>")
+            await ctx.reply(f"Added role label `{role_name.split('-', 1)[1]}` => <@&{role.id}>")
 
         except commands.errors.RoleNotFound:
             await ctx.reply(f"Could not find role \"{args[1]}\"")
 
     elif subcommand == "remove":
-        role_name = args[0]
+        role_name = f"{ctx.guild.id}-{args[0]}"
 
         try:
             role = registered_roles[role_name]
@@ -68,16 +68,16 @@ async def role_command(ctx: commands.Context, subcommand: str, *args):
             del registered_roles[role_name]
             del role_perms[role_name]
 
-            await ctx.reply(f"Removed role label `{role_name}` => <@&{role.id}>")
+            await ctx.reply(f"Removed role label `{role_name.split('-', 1)[1]}` => <@&{role.id}>")
         except KeyError:
-            await ctx.reply(f"Role label `{role_name}` does not exist")
+            await ctx.reply(f"Role label `{role_name.split('-', 1)[1]}` does not exist")
 
     elif subcommand == "list":
         roles_list = ""
 
         if registered_roles:
             for role_name in registered_roles:
-                roles_list += f"`{role_name}` => <@&{registered_roles[role_name].id}>\n"
+                roles_list += f"`{role_name.split('-', 1)[1]}` => <@&{registered_roles[role_name].id}>\n"
 
             await ctx.reply(roles_list)
 
@@ -88,6 +88,8 @@ async def role_command(ctx: commands.Context, subcommand: str, *args):
 @bot.command(name='roleperms')
 @commands.has_permissions(manage_roles=True, mention_everyone=True)
 async def roleperms_command(ctx: commands.Context, subcommand: str, role_name: str, *args):
+    role_name = f"{ctx.guild.id}-{role_name}"
+
     if role_name in registered_roles:
         if subcommand == "add":
             try:
@@ -95,7 +97,7 @@ async def roleperms_command(ctx: commands.Context, subcommand: str, role_name: s
 
                 role_perms[role_name].append(user)
 
-                await ctx.reply(f"Granted {user.mention} permissions to mention `{role_name}`")
+                await ctx.reply(f"Granted {user.mention} permissions to mention `{role_name.split('-', 1)[1]}`")
 
             except commands.errors.UserNotFound:
                 await ctx.reply(f"Could not find user \"{args[0]}\"")
@@ -106,12 +108,12 @@ async def roleperms_command(ctx: commands.Context, subcommand: str, role_name: s
 
                 role_perms[role_name].remove(user)
 
-                await ctx.reply(f"Removed {user.mention}'s permissions to mention {role_name}")
+                await ctx.reply(f"Removed {user.mention}'s permissions to mention {role_name.split('-', 1)[1]}")
             except commands.errors.UserNotFound:
-                await ctx.reply(f"User `{role_name}` either didn't have perms already, or does not exist")
+                await ctx.reply(f"User `{role_name.split('-', 1)[1]}` either didn't have perms already, or does not exist")
 
         elif subcommand == "list":
-            user_list = f"Users allowed to mention role `{role_name}`\n"
+            user_list = f"Users allowed to mention role `{role_name.split('-', 1)[1]}`\n"
 
             if role_perms[role_name]:
                 for user in role_perms[role_name]:
@@ -120,24 +122,26 @@ async def roleperms_command(ctx: commands.Context, subcommand: str, role_name: s
                 await ctx.reply(user_list)
 
             else:
-                await ctx.reply(f"No user has been granted permission to mention `{role_name}` through this bot.")
+                await ctx.reply(f"No user has been granted permission to mention `{role_name.split('-', 1)[1]}` through this bot.")
 
     else:
-        await ctx.reply(f"Role label `{role_name}` does not exist.")
+        await ctx.reply(f"Role label `{role_name.split('-', 1)[1]}` does not exist.")
 
 
 @bot.command(name='pingrole')
 async def pingrole_command(ctx: commands.Context, role_name: str):
+    role_name = f"{ctx.guild.id}-{role_name}"
+
     if role_name in registered_roles:
         if ctx.author in role_perms[role_name]:
             await ctx.send(f"<@&{registered_roles[role_name].id}>", allowed_mentions=AllowedMentions(roles=True))
             await ctx.message.delete()
 
         else:
-            await ctx.reply(f"You do not have permission to mention `{role_name}`")
+            await ctx.reply(f"You do not have permission to mention `{role_name.split('-', 1)[1]}`")
 
     else:
-        await ctx.reply(f"Role label `{role_name}` does not exist.")
+        await ctx.reply(f"Role label `{role_name.split('-', 1)[1]}` does not exist.")
 
 
 bot.run(BOT_TOKEN)
