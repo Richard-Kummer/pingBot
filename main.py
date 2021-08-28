@@ -128,7 +128,16 @@ async def roleperms_command(ctx: commands.Context, subcommand: str, role_name: s
 
 @bot.command(name='pingrole')
 async def pingrole_command(ctx: commands.Context, role_name: str):
-    pass
+    if role_name in registered_roles:
+        if ctx.author in role_perms[role_name]:
+            await ctx.send(f"<@&{registered_roles[role_name].id}>", allowed_mentions=AllowedMentions(roles=True))
+            await ctx.message.delete()
+
+        else:
+            await ctx.reply(f"You do not have permission to mention `{role_name}`")
+
+    else:
+        await ctx.reply(f"Role label `{role_name}` does not exist.")
 
 
 bot.run(BOT_TOKEN)
