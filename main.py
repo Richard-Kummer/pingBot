@@ -23,7 +23,7 @@ bot = commands.Bot(command_prefix='+', help_command=None, activity=discord.Activ
 bot.allowed_mentions = AllowedMentions.none()
 
 
-@tasks.loop(minutes=1)
+@tasks.loop(hours=1)
 async def data_saver():
     if os.path.isfile(f"{SAVE_NAME}.bak"):
         os.remove(f"{SAVE_NAME}.bak")
