@@ -11,6 +11,8 @@ SAVE_NAME = "data.json"
 registered_roles = {}
 role_perms = {}
 mentioned = {}
+timer = time.time()
+timer_best = 0
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -29,14 +31,14 @@ async def data_saver():
         os.rename(SAVE_NAME, f"{SAVE_NAME}.bak")
 
     with open(SAVE_NAME, 'w') as f:
-        json.dump([registered_roles, role_perms, mentioned], f)
+        json.dump([registered_roles, role_perms, mentioned, timer, timer_best], f)
 
     print(f"{time.asctime()} - data saved to disk")
 
 
 @bot.event
 async def on_ready():
-    global registered_roles, role_perms, mentioned
+    global registered_roles, role_perms, mentioned, timer, timer_best
 
     if os.path.isfile(SAVE_NAME):
         with open(SAVE_NAME, 'r') as f:
@@ -45,14 +47,18 @@ async def on_ready():
             registered_roles = bot_data[0]
             role_perms = bot_data[1]
             mentioned = bot_data[2]
+            timer = bot_data[3]
+            timer_best = bot_data[4]
 
     data_saver.start()
 
-    print("yes")
+    print("Ready")
 
 
 @bot.event
 async def on_message(msg: Message):
+    global timer_best
+
     if msg.author == bot.user:
         return
 
@@ -79,6 +85,14 @@ async def on_message(msg: Message):
 
     if bot.user in msg.mentions:
         await msg.add_reaction(bot.get_emoji(881265213972836453))
+
+    # Inside joak
+    if msg.guild.id == 717046745149866046 and "amime" in msg.content.lower():
+        days = int((time.time() - timer) // 86400)
+        if days > timer_best:
+            timer_best = days
+
+        await msg.reply(f"<@&811283129544867850> the\n{days} Days\nBest: {timer_best} Days")
 
 
 @bot.command(name='help')
