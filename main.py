@@ -2,6 +2,7 @@ import os
 import json
 import time
 
+import discord
 from discord.ext import commands, tasks
 from discord import AllowedMentions, Message
 from dotenv import load_dotenv
@@ -17,7 +18,7 @@ timer_best = 0
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-bot = commands.Bot(command_prefix='+', help_command=None)
+bot = commands.Bot(command_prefix='+', help_command=None, activity=discord.Activity(type=discord.ActivityType.watching, name="+help"))
 
 bot.allowed_mentions = AllowedMentions.none()
 
