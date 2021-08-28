@@ -1,11 +1,12 @@
 import os
 
 from discord.ext import commands
-from discord import AllowedMentions
+from discord import AllowedMentions, Message
 from dotenv import load_dotenv
 
 registered_roles = {}
 role_perms = {}
+mentioned = {}
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -20,11 +21,38 @@ async def on_ready():
     print("yes")
 
 
+@bot.event
+async def on_message(msg: Message):
+    if msg.author == bot.user:
+        return
+
+    for user in msg.mentions:
+        user_id = str(user.id)
+        channel_id = str(msg.channel.id)
+
+        if user_id not in mentioned:
+            mentioned[user_id] = {}
+
+        mentioned[user_id][channel_id] = msg
+
+    if msg.content.lower().strip() == "who ping":
+        user_id = str(msg.author.id)
+        channel_id = str(msg.channel.id)
+
+        if user_id in mentioned and channel_id in mentioned[user_id]:
+            await msg.reply(f"You were last mentioned by <@{mentioned[user_id][channel_id].author.id}> here: {mentioned[user_id][channel_id].jump_url}")
+        else:
+            await msg.reply("Could not find a recent mention in this channel.")
+
+    await bot.process_commands(msg)
+
+
 @bot.command(name='help')
 async def help_command(ctx: commands.Context):
     await ctx.reply("""```
 +help                              - Shows this message
 +invite                            - Shows a bot invite link to add to your server
++ping                              - Measures Discord API response time
 +role
     set <role_name> <@role>        - Adds role label, where custom mention perms can be set
     remove <role_name>             - Removes a role from being pinged entirely via this bot
@@ -39,6 +67,11 @@ async def help_command(ctx: commands.Context):
 @bot.command(name='invite')
 async def invite_command(ctx: commands.Context):
     await ctx.reply("https://discord.com/api/oauth2/authorize?client_id=880871977382998086&permissions=470080&scope=bot")
+
+
+@bot.command(name='ping')
+async def ping_command(ctx: commands.Context):
+    await ctx.reply(f"Pong! {round(bot.latency, 2)}ms")
 
 
 @bot.command(name='role')
